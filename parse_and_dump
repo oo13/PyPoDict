@@ -1,0 +1,73 @@
+#!/usr/bin/python3
+'''parse and dump.
+
+Just for test.
+'''
+# Copyright © 2026 OOTA, Masato
+# This program is published under MIT License.
+
+import argparse
+import pathlib
+import sys
+
+import podict
+import podict.dump
+import podict.metadata
+
+arg_parser = argparse.ArgumentParser()
+arg_parser.add_argument('--preserve-path', action='store_true', help='Show the source filename preserved the path.')
+arg_parser.add_argument('files', metavar='PO files', nargs='*', help='Input filenames, or stdin if a single "-" or nothing is specified.')
+args = arg_parser.parse_args()
+
+
+def parse_and_dump_a_file(f, filename, display_preserve_path):
+    fname = filename if display_preserve_path else pathlib.Path(filename).name
+    po_entries, obsolete_entries, error_messages = podict.parse(f)
+    if len(error_messages) > 0:
+        if len(error_messages) == 1:
+            sys.stderr.write('PO file has an error.\n')
+        else:
+            n = len(error_messages)
+            sys.stderr.write(f'PO file has {n} errors.\n')
+        for err in error_messages:
+            sys.stderr.write(f'{fname}:{err[0]},{err[1]}: {err[2]}.\n')
+        sys.stderr.write('Stop processing.\n')
+        return 1
+    metadata_str = None
+    if '' in po_entries:
+        metadata_entry = po_entries['']
+        if 'msgstr' in metadata_entry:
+            metadata_str = metadata_entry['msgstr'][0]
+    if metadata_str is None:
+        sys.stderr.write(f'{fname}: No metadata is found.\n')
+    else:
+        metadata, error_messages = podict.metadata.parse(metadata_str)
+        if len(error_messages) > 0:
+            if len(error_messages) == 1:
+                sys.stderr.write('Metadata has an error.\n')
+            else:
+                n = len(error_messages)
+                sys.stderr.write(f'Metadata has {n} errors.\n')
+            for err in error_messages:
+                sys.stderr.write(f'Metadata in {fname}:{err[0]},{err[1]}: {err[2]}.\n')
+            sys.stderr.write('Stop processing.\n')
+            return 1
+        else:
+            po_entries['']['msgstr'][0] = podict.metadata.dumps(metadata)
+    po_entries.update(obsolete_entries)
+    podict.dump.dump(sys.stdout, po_entries)
+    return 0
+
+
+if len(args.files) == 0:
+    filenames = ( '-', )
+else:
+    filenames = args.files
+for filename in filenames:
+    if filename == '-':
+        exit_code = parse_and_dump_a_file(sys.stdin, 'stdin', False)
+    else:
+        with open(filename, 'r', encoding='utf-8') as f:
+            exit_code = parse_and_dump_a_file(f, filename, args.preserve_path)
+    if exit_code != 0:
+        sys.exit(exit_code)

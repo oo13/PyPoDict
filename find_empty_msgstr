@@ -1,0 +1,53 @@
+#!/usr/bin/python3
+'''find empty and msgstr to report the line.
+
+The fuzzy entry is considered as an empty.
+'''
+# Copyright © 2026 OOTA, Masato
+# This program is published under MIT License.
+
+import argparse
+import pathlib
+import sys
+
+import podict
+
+arg_parser = argparse.ArgumentParser()
+arg_parser.add_argument('--preserve-path', action='store_true', help='Show the source filename preserved the path.')
+arg_parser.add_argument('files', metavar='PO files', nargs='*', help='Input filenames, or stdin if a single "-" or nothing is specified.')
+args = arg_parser.parse_args()
+
+
+def check_a_file(f, filename, display_preserve_path):
+    fname = filename if display_preserve_path else pathlib.Path(filename).name
+    po_entries, _, error_messages = podict.parse(f)
+    if len(error_messages) > 0:
+        for err in error_messages:
+            sys.stderr.write(f'{fname}:{err[0]},{err[1]}: {err[2]}.\n')
+        sys.stderr.write('Stop reporting.\n')
+        return 1
+    else:
+        for entry in po_entries.values():
+            if 'fuzzy' in entry:
+                print(f'{fname}:{entry["line"]},{entry["column"]}: Fuzzy.')
+            empty = True
+            for msgstr in entry['msgstr']:
+                if len(msgstr) > 0:
+                    empty = False
+                    break
+            if empty:
+                print(f'{fname}:{entry["line"]},{entry["column"]}: Empty msgstr.')
+        return 0
+
+if len(args.files) == 0:
+    filenames = ( '-', )
+else:
+    filenames = args.files
+for filename in filenames:
+    if filename == '-':
+        exit_code = check_a_file(sys.stdin, 'stdin', False)
+    else:
+        with open(filename, 'r', encoding='utf-8') as f:
+            exit_code = check_a_file(f, filename, args.preserve_path)
+    if exit_code != 0:
+        sys.exit(exit_code)

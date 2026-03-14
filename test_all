@@ -1,0 +1,40 @@
+#!/usr/bin/python3
+'''test all'''
+# Copyright © 2026 OOTA, Masato
+# This program is published under MIT License.
+
+import argparse
+import importlib
+import io
+import sys
+
+import tests
+
+
+arg_parser = argparse.ArgumentParser()
+arg_parser.add_argument('-q', '--quiet', action='store_true', help='Don\'t show the result and the category name if all the tests in the category are passed.')
+arg_parser.add_argument('-v', '--verbose', action='store_true', help='Show the message even when the test is passed.')
+args = arg_parser.parse_args()
+
+quiet = args.quiet
+verbose = args.verbose
+
+
+good = True
+for category in tests.__all__:
+    if not quiet:
+        sys.stdout.write(f'# Test "{category}"\n')
+    msgout = io.StringIO()
+    result = importlib.import_module('.' + category, 'tests').test(msgout, verbose)
+    good &= result
+    if not result or verbose:
+        sys.stdout.write(msgout.getvalue())
+
+
+if good:
+    if not quiet:
+        print('Done.')
+else:
+    print('Failed.')
+
+sys.exit(0 if good else 1)
