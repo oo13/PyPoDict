@@ -1,7 +1,7 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: pypodict
 Upstream-Contact: ooyooxei+gh@gmail.com
-Source: https://github.com/oo13/pypodict
+Source: https://github.com/oo13/PyPoDict
 
 Files: *
 Copyright: © 2026 OOTA, Masato

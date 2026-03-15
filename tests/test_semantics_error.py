@@ -63,7 +63,7 @@ msgstr "B3"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 12, 1, 'Duplicate entry is found (the position of the previous entry is 5,1)', ),
+            ( 12, 1, 'Duplicate entry is found (the location of the previous entry is 5,1)', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -104,8 +104,8 @@ msgstr "B2"
             },
         }
         good &= error_messages == [
-            ( 9, 4, 'Duplicate entry is found (the position of the previous entry is 2,1)', ),
-            ( 13, 1, 'Duplicate entry is found (the position of the previous entry is 6,4)', ),
+            ( 9, 4, 'Duplicate entry is found (the location of the previous entry is 2,1)', ),
+            ( 13, 1, 'Duplicate entry is found (the location of the previous entry is 6,4)', ),
         ]
         return 'Some errors are detected' if not good else None
 

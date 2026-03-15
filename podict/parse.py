@@ -17,7 +17,6 @@ class _CharFeeder:
         self._next_line = 1
         self._next_column = 1
         self._next_c = None
-        self._checked = False
     def __iter__(self):
         return self
     def __next__(self):
@@ -121,7 +120,7 @@ def _parse_msg_keyword(char_feeder):
     The value for the token MSGSTR_PLURAL is n (integer) of '[n]'.
     The value for the token ERROR is the error message.
 
-    line and column are the first character of the keyword or the position detecting the error.
+    line and column are the first character of the keyword or the location detecting the error.
     '''
     token = _Token.ERROR
     value = None
@@ -205,7 +204,7 @@ def _parse_text(char_feeder):
     The value for the token TEXT is the text.
     The value for the token ERROR is the error message.
 
-    line and column are the position of the opening '"' or the position detecting the error.
+    line and column are the location of the opening '"' or the location detecting the error.
     '''
     text = ''
     err_msg = None
@@ -279,7 +278,7 @@ def _lex(char_feeder):
 
     return token, value, line, column
 
-    side effect: char_feeder points the next position of the last fed character.
+    side effect: char_feeder points the next location of the last fed character.
 
     The value for the token COMMENT is the comment text (whole line without newline).
     The value for the token MSGSTR_PLURAL is n (integer) of '[n]'.
@@ -386,7 +385,7 @@ def _parse_reference_comment(ref_comment):
     ( '\u2068', [^\u2069]*, '\u2069' | [^ \t]* ) [ \t]* ( ':', [ \t]*, [0-9]* )?
     It means that only the last ':' before a string formed by '0'..'9' separates the filename and the line number, and the filename can contain ':'.
     '''
-    # split by elim
+    # split by delim
     undetermined = []
     tokens = []
     quoting = False
@@ -487,7 +486,7 @@ class _TokenFeeder:
 # In a text except for msgstr: PREV_MSGCTXT_TEXT <= x <= MSGID_PLURAL_TEXT
 # In a msgstr text: MSGSTR_TEXT <= x <= MSGSTR_PLURAL_TEXT
 class _State(enum.IntEnum):
-    END_OF_ENTRY = enum.auto() # Special state, don't consume the token.
+    END_OF_ENTRY = enum.auto() # Special state, don't consume a token.
     ERROR_BEFORE_MSGID = enum.auto() # The next msgid should be dropped.
     COMMENT = enum.auto()
     PREV_MSGCTXT = enum.auto()
@@ -579,7 +578,7 @@ _state_trans_def = (
     ( _State.ERROR, _Token.MSGID, _State.END_OF_ENTRY, ),
     ( _State.ERROR, _Token.EOF, _State.END_OF_ENTRY, ),
 )
-# Other tokens cause the transition to an error state, which makes parse() skip until a msgid, msgid_plural, msgstr, or msgid_plural is appeared, and then find the start position of the next entry to recover.
+# Other tokens cause the transition to an error state, which makes parse() skip until a msgid, msgid_plural, msgstr, or msgid_plural is appeared, and then find the start location of the next entry to recover.
 _state_trans_table = [ [ _State.ERROR_BEFORE_MSGID ] * _Token.TOTAL for i in range(_State.TOTAL) ]
 for i in range(_State.TOTAL):
     for j in range(_Token.TOTAL):
@@ -625,7 +624,7 @@ def parse(textfile_or_char_iter):
         [ line_number, column_number, message ],
         ...
     ]
-    Technically speaking, column_number is the position of the code point. It doesn't care about east asian width, combining character, or something.
+    Technically speaking, column_number is the location of the code point. It doesn't care about east asian width, combining character, or something.
 
     If there are error messages, the (1) and (2) may not contain some entries around the errors.
     '''
@@ -662,7 +661,7 @@ def parse(textfile_or_char_iter):
                     prev_line = obsolete_entries[id]['line']
                     prev_column = obsolete_entries[id]['column']
                 if prev_line is not None:
-                    errors.append( ( entry_data['line'], entry_data['column'], f'Duplicate entry is found (the position of the previous entry is {prev_line},{prev_column})' ), )
+                    errors.append( ( entry_data['line'], entry_data['column'], f'Duplicate entry is found (the location of the previous entry is {prev_line},{prev_column})' ), )
                 elif entry_is_obsolete:
                     entry_data['obsolete'] = True
                     obsolete_entries[id] = entry_data
