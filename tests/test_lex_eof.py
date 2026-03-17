@@ -192,7 +192,7 @@ def test(msgout=sys.stdout, verbose=True):
         good &= len(po_entries) == 0
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 1, 6, 'Unexpected EOF (quoted text is expected)', )
+            ( 1, 6, 'Unexpected EOF (the previous entry is incomplete)', )
         ]
         return 'Some errors are detected' if not good else None
 

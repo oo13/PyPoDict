@@ -3083,6 +3083,13 @@ msgstr "C"
                 'line': 2,
                 'column': 1,
             },
+            'b': {
+                'msgid': 'b',
+                'msgstr': [ 'B' ],
+                'comment': [ '# comment' ],
+                'line': 7,
+                'column': 1,
+            },
             'c': {
                 'msgid': 'c',
                 'msgstr': [ 'C' ],
@@ -3092,7 +3099,7 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 6, 1, 'Unexpected comment (quoted text is expected)', ),
+            ( 6, 1, 'Unexpected comment (the previous entry is incomplete)', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -3118,6 +3125,13 @@ msgstr "C"
                 'line': 2,
                 'column': 1,
             },
+            'cb' + '\x04' + 'b': {
+                'msgctxt': 'cb',
+                'msgid': 'b',
+                'msgstr': [ 'B' ],
+                'line': 6,
+                'column': 1,
+            },
             'c': {
                 'msgid': 'c',
                 'msgstr': [ 'C' ],
@@ -3127,7 +3141,7 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 6, 1, 'Unexpected msgctxt (quoted text is expected)', ),
+            ( 6, 1, 'Unexpected msgctxt (the previous entry is incomplete)', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -3152,6 +3166,12 @@ msgstr "C"
                 'line': 2,
                 'column': 1,
             },
+            'b': {
+                'msgid': 'b',
+                'msgstr': [ 'B' ],
+                'line': 6,
+                'column': 1,
+            },
             'c': {
                 'msgid': 'c',
                 'msgstr': [ 'C' ],
@@ -3161,7 +3181,7 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 6, 1, 'Unexpected msgid (quoted text is expected)', ),
+            ( 6, 1, 'Unexpected msgid (the previous entry is incomplete)', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -3325,6 +3345,12 @@ msgstr "C"
                 'line': 2,
                 'column': 1,
             },
+            'b': {
+                'msgid': 'b',
+                'msgstr': [ 'B' ],
+                'line': 7,
+                'column': 1,
+            },
             'c': {
                 'msgid': 'c',
                 'msgstr': [ 'C' ],
@@ -3357,7 +3383,7 @@ msgid
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 6, 1, 'Unexpected EOF (quoted text is expected)', ),
+            ( 6, 1, 'Unexpected EOF (the previous entry is incomplete)', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -3392,7 +3418,8 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 6, 4, 'Unexpected #| msgctxt (quoted text is expected)', ),
+            ( 6, 4, 'Unexpected #| msgctxt (the previous entry is incomplete)', ),
+            ( 7, 1, 'Unexpected msgid', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -3403,7 +3430,7 @@ msgid "a"
 msgstr "A"
 
 msgid
-#| msgid "pb2"
+#| msgid "pb"
 msgid "b"
 msgstr "B"
 
@@ -3418,6 +3445,13 @@ msgstr "C"
                 'line': 2,
                 'column': 1,
             },
+            'b': {
+                'msgid': 'b',
+                'msgstr': [ 'B' ],
+                'line': 7,
+                'column': 1,
+                'prev_msgid': 'pb',
+            },
             'c': {
                 'msgid': 'c',
                 'msgstr': [ 'C' ],
@@ -3427,7 +3461,7 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 6, 4, 'Unexpected #| msgid (quoted text is expected)', ),
+            ( 6, 4, 'Unexpected #| msgid (the previous entry is incomplete)', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -3533,7 +3567,8 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 7, 1, 'Unexpected comment (quoted text is expected)', ),
+            ( 7, 1, 'Unexpected comment (the previous entry is incomplete)', ),
+            ( 8, 1, 'Unexpected msgstr[n]', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -3568,7 +3603,8 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 7, 1, 'Unexpected msgctxt (quoted text is expected)', ),
+            ( 7, 1, 'Unexpected msgctxt (the previous entry is incomplete)', ),
+            ( 8, 1, 'Unexpected msgstr[n]', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -3581,7 +3617,7 @@ msgstr "A"
 msgid "b"
 msgid_plural
 msgid "b2"
-msgstr[0] "B"
+msgstr "B"
 
 msgid "c"
 msgstr "C"
@@ -3594,6 +3630,12 @@ msgstr "C"
                 'line': 2,
                 'column': 1,
             },
+            'b2': {
+                'msgid': 'b2',
+                'msgstr': [ 'B' ],
+                'line': 7,
+                'column': 1,
+            },
             'c': {
                 'msgid': 'c',
                 'msgstr': [ 'C' ],
@@ -3603,7 +3645,7 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 7, 1, 'Unexpected msgid (quoted text is expected)', ),
+            ( 7, 1, 'Unexpected msgid (the previous entry is incomplete)', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -3805,7 +3847,7 @@ msgid_plural
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 7, 1, 'Unexpected EOF (quoted text is expected)', ),
+            ( 7, 1, 'Unexpected EOF (the previous entry is incomplete)', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -3840,7 +3882,8 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 7, 4, 'Unexpected #| msgctxt (quoted text is expected)', ),
+            ( 7, 4, 'Unexpected #| msgctxt (the previous entry is incomplete)', ),
+            ( 8, 1, 'Unexpected msgstr[n]', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -3875,7 +3918,8 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 7, 4, 'Unexpected #| msgid (quoted text is expected)', ),
+            ( 7, 4, 'Unexpected #| msgid (the previous entry is incomplete)', ),
+            ( 8, 1, 'Unexpected msgstr[n]', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -3981,7 +4025,8 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 7, 1, 'Unexpected comment (quoted text is expected)', ),
+            ( 7, 1, 'Unexpected comment (the previous entry is incomplete)', ),
+            ( 8, 1, 'Unexpected msgstr', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -4016,7 +4061,8 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 7, 1, 'Unexpected msgctxt (quoted text is expected)', ),
+            ( 7, 1, 'Unexpected msgctxt (the previous entry is incomplete)', ),
+            ( 8, 1, 'Unexpected msgstr', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -4042,6 +4088,12 @@ msgstr "C"
                 'line': 2,
                 'column': 1,
             },
+            'b2': {
+                'msgid': 'b2',
+                'msgstr': [ 'B' ],
+                'line': 7,
+                'column': 1,
+            },
             'c': {
                 'msgid': 'c',
                 'msgstr': [ 'C' ],
@@ -4051,7 +4103,7 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 7, 1, 'Unexpected msgid (quoted text is expected)', ),
+            ( 7, 1, 'Unexpected msgid (the previous entry is incomplete)', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -4219,6 +4271,12 @@ msgstr "C"
                 'line': 2,
                 'column': 1,
             },
+            'b2': {
+                'msgid': 'b2',
+                'msgstr': [ 'B' ],
+                'line': 8,
+                'column': 1,
+            },
             'c': {
                 'msgid': 'c',
                 'msgstr': [ 'C' ],
@@ -4252,7 +4310,7 @@ msgstr
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 7, 1, 'Unexpected EOF (quoted text is expected)', ),
+            ( 7, 1, 'Unexpected EOF (the previous entry is incomplete)', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -4288,7 +4346,8 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 7, 4, 'Unexpected #| msgctxt (quoted text is expected)', ),
+            ( 7, 4, 'Unexpected #| msgctxt (the previous entry is incomplete)', ),
+            ( 8, 1, 'Unexpected msgid', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -4315,6 +4374,13 @@ msgstr "C"
                 'line': 2,
                 'column': 1,
             },
+            'b2': {
+                'msgid': 'b2',
+                'msgstr': [ 'B' ],
+                'line': 8,
+                'column': 1,
+                'prev_msgid': 'pb2',
+            },
             'c': {
                 'msgid': 'c',
                 'msgstr': [ 'C' ],
@@ -4324,7 +4390,7 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 7, 4, 'Unexpected #| msgid (quoted text is expected)', ),
+            ( 7, 4, 'Unexpected #| msgid (the previous entry is incomplete)', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -4433,7 +4499,8 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 8, 1, 'Unexpected comment (quoted text is expected)', ),
+            ( 8, 1, 'Unexpected comment (the previous entry is incomplete)', ),
+            ( 9, 1, 'Unexpected msgstr[n]', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -4469,7 +4536,8 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 8, 1, 'Unexpected msgctxt (quoted text is expected)', ),
+            ( 8, 1, 'Unexpected msgctxt (the previous entry is incomplete)', ),
+            ( 9, 1, 'Unexpected msgstr[n]', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -4483,7 +4551,7 @@ msgid "b"
 msgid_plural "bp"
 msgstr[0]
 msgid "b2"
-msgstr[0] "B"
+msgstr "B"
 
 msgid "c"
 msgstr "C"
@@ -4496,6 +4564,12 @@ msgstr "C"
                 'line': 2,
                 'column': 1,
             },
+            'b2': {
+                'msgid': 'b2',
+                'msgstr': [ 'B' ],
+                'line': 8,
+                'column': 1,
+            },
             'c': {
                 'msgid': 'c',
                 'msgstr': [ 'C' ],
@@ -4505,7 +4579,7 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 8, 1, 'Unexpected msgid (quoted text is expected)', ),
+            ( 8, 1, 'Unexpected msgid (the previous entry is incomplete)', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -4679,6 +4753,12 @@ msgstr "C"
                 'line': 2,
                 'column': 1,
             },
+            'b2': {
+                'msgid': 'b2',
+                'msgstr': [ 'B' ],
+                'line': 9,
+                'column': 1,
+            },
             'c': {
                 'msgid': 'c',
                 'msgstr': [ 'C' ],
@@ -4713,7 +4793,7 @@ msgstr[0]
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 8, 1, 'Unexpected EOF (quoted text is expected)', ),
+            ( 8, 1, 'Unexpected EOF (the previous entry is incomplete)', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -4750,7 +4830,8 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 8, 4, 'Unexpected #| msgctxt (quoted text is expected)', ),
+            ( 8, 4, 'Unexpected #| msgctxt (the previous entry is incomplete)', ),
+            ( 9, 1, 'Unexpected msgid', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -4778,6 +4859,13 @@ msgstr "C"
                 'line': 2,
                 'column': 1,
             },
+            'b2': {
+                'msgid': 'b2',
+                'msgstr': [ 'B' ],
+                'line': 9,
+                'column': 1,
+                'prev_msgid': 'pb2',
+            },
             'c': {
                 'msgid': 'c',
                 'msgstr': [ 'C' ],
@@ -4787,7 +4875,7 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 8, 4, 'Unexpected #| msgid (quoted text is expected)', ),
+            ( 8, 4, 'Unexpected #| msgid (the previous entry is incomplete)', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -6718,6 +6806,13 @@ msgstr "C"
                 'line': 2,
                 'column': 1,
             },
+            'b': {
+                'msgid': 'b',
+                'msgstr': [ 'B' ],
+                'comment': [ '# comment' ],
+                'line': 7,
+                'column': 1,
+            },
             'c': {
                 'msgid': 'c',
                 'msgstr': [ 'C' ],
@@ -6727,7 +6822,7 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 6, 1, 'Unexpected comment', ),
+            ( 6, 1, 'Unexpected comment (the previous entry is incomplete)', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -6753,6 +6848,13 @@ msgstr "C"
                 'line': 2,
                 'column': 1,
             },
+            'cb' + '\x04' + 'b': {
+                'msgctxt': 'cb',
+                'msgid': 'b',
+                'msgstr': [ 'B' ],
+                'line': 6,
+                'column': 1,
+            },
             'c': {
                 'msgid': 'c',
                 'msgstr': [ 'C' ],
@@ -6762,7 +6864,7 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 6, 1, 'Unexpected msgctxt', ),
+            ( 6, 1, 'Unexpected msgctxt (the previous entry is incomplete)', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -6787,6 +6889,12 @@ msgstr "C"
                 'line': 2,
                 'column': 1,
             },
+            'b': {
+                'msgid': 'b',
+                'msgstr': [ 'B' ],
+                'line': 6,
+                'column': 1,
+            },
             'c': {
                 'msgid': 'c',
                 'msgstr': [ 'C' ],
@@ -6796,7 +6904,7 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 6, 1, 'Unexpected msgid', ),
+            ( 6, 1, 'Unexpected msgid (the previous entry is incomplete)', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -7000,7 +7108,7 @@ msgid "msgid text state"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 6, 1, 'Unexpected EOF', ),
+            ( 6, 1, 'Unexpected EOF (the previous entry is incomplete)', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -7034,7 +7142,8 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 6, 4, 'Unexpected #| msgctxt', ),
+            ( 6, 4, 'Unexpected #| msgctxt (the previous entry is incomplete)', ),
+            ( 7, 1, 'Unexpected msgstr', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -7068,7 +7177,8 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 6, 4, 'Unexpected #| msgid', ),
+            ( 6, 4, 'Unexpected #| msgid (the previous entry is incomplete)', ),
+            ( 7, 1, 'Unexpected msgstr', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -7173,7 +7283,8 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 7, 1, 'Unexpected comment', ),
+            ( 7, 1, 'Unexpected comment (the previous entry is incomplete)', ),
+            ( 8, 1, 'Unexpected msgstr[n]', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -7208,7 +7319,8 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 7, 1, 'Unexpected msgctxt', ),
+            ( 7, 1, 'Unexpected msgctxt (the previous entry is incomplete)', ),
+            ( 8, 1, 'Unexpected msgstr[n]', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -7220,8 +7332,8 @@ msgstr "A"
 
 msgid "b"
 msgid_plural "msgid_plural_text state"
-msgid "b"
-msgstr[0] "B"
+msgid "b2"
+msgstr "B"
 
 msgid "c"
 msgstr "C"
@@ -7234,6 +7346,12 @@ msgstr "C"
                 'line': 2,
                 'column': 1,
             },
+            'b2': {
+                'msgid': 'b2',
+                'msgstr': [ 'B' ],
+                'line': 7,
+                'column': 1,
+            },
             'c': {
                 'msgid': 'c',
                 'msgstr': [ 'C' ],
@@ -7243,7 +7361,7 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 7, 1, 'Unexpected msgid', ),
+            ( 7, 1, 'Unexpected msgid (the previous entry is incomplete)', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -7450,7 +7568,7 @@ msgid_plural "msgid_plural_text state"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 7, 1, 'Unexpected EOF', ),
+            ( 7, 1, 'Unexpected EOF (the previous entry is incomplete)', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -7485,7 +7603,8 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 7, 4, 'Unexpected #| msgctxt', ),
+            ( 7, 4, 'Unexpected #| msgctxt (the previous entry is incomplete)', ),
+            ( 8, 1, 'Unexpected msgstr[n]', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -7520,7 +7639,8 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 7, 4, 'Unexpected #| msgid', ),
+            ( 7, 4, 'Unexpected #| msgid (the previous entry is incomplete)', ),
+            ( 8, 1, 'Unexpected msgstr[n]', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -8644,8 +8764,7 @@ msgstr "C"
 msgid "a"
 msgstr "A"
 
-#| "error_before_msgid"
-msgid "error state"
+msgid error_state
 # comment
 msgid "b"
 msgstr "B"
@@ -8665,19 +8784,19 @@ msgstr "C"
                 'msgid': 'b',
                 'msgstr': [ 'B' ],
                 'comment': [ '# comment' ],
-                'line': 8,
+                'line': 7,
                 'column': 1,
             },
             'c': {
                 'msgid': 'c',
                 'msgstr': [ 'C' ],
-                'line': 11,
+                'line': 10,
                 'column': 1,
             },
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 5, 4, 'Unexpected #| quoted text', ),
+            ( 5, 7, 'Unknown token', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -8687,8 +8806,7 @@ msgstr "C"
 msgid "a"
 msgstr "A"
 
-#| "error_before_msgid"
-msgid "error state"
+msgid error_state
 msgctxt "cb"
 msgid "b"
 msgstr "B"
@@ -8708,19 +8826,19 @@ msgstr "C"
                 'msgctxt': 'cb',
                 'msgid': 'b',
                 'msgstr': [ 'B' ],
-                'line': 7,
+                'line': 6,
                 'column': 1,
             },
             'c': {
                 'msgid': 'c',
                 'msgstr': [ 'C' ],
-                'line': 11,
+                'line': 10,
                 'column': 1,
             },
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 5, 4, 'Unexpected #| quoted text', ),
+            ( 5, 7, 'Unknown token', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -8730,8 +8848,7 @@ msgstr "C"
 msgid "a"
 msgstr "A"
 
-#| "error_before_msgid"
-msgid "error state"
+msgid error_state
 msgid "b"
 msgstr "B"
 
@@ -8749,19 +8866,19 @@ msgstr "C"
             'b': {
                 'msgid': 'b',
                 'msgstr': [ 'B' ],
-                'line': 7,
+                'line': 6,
                 'column': 1,
             },
             'c': {
                 'msgid': 'c',
                 'msgstr': [ 'C' ],
-                'line': 10,
+                'line': 9,
                 'column': 1,
             },
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 5, 4, 'Unexpected #| quoted text', ),
+            ( 5, 7, 'Unknown token', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -8771,8 +8888,7 @@ msgstr "C"
 msgid "a"
 msgstr "A"
 
-#| "error_before_msgid"
-msgid "error state"
+msgid error_state
 msgid_plural "bp"
 msgstr[0] "B"
 
@@ -8790,13 +8906,13 @@ msgstr "C"
             'c': {
                 'msgid': 'c',
                 'msgstr': [ 'C' ],
-                'line': 10,
+                'line': 9,
                 'column': 1,
             },
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 5, 4, 'Unexpected #| quoted text', ),
+            ( 5, 7, 'Unknown token', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -8806,8 +8922,7 @@ msgstr "C"
 msgid "a"
 msgstr "A"
 
-#| "error_before_msgid"
-msgid "error state"
+msgid error_state
 msgstr "B"
 
 msgid "c"
@@ -8824,13 +8939,13 @@ msgstr "C"
             'c': {
                 'msgid': 'c',
                 'msgstr': [ 'C' ],
-                'line': 9,
+                'line': 8,
                 'column': 1,
             },
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 5, 4, 'Unexpected #| quoted text', ),
+            ( 5, 7, 'Unknown token', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -8840,8 +8955,7 @@ msgstr "C"
 msgid "a"
 msgstr "A"
 
-#| "error_before_msgid"
-msgid "error state"
+msgid error_state
 msgstr[0] "B"
 
 msgid "c"
@@ -8858,13 +8972,13 @@ msgstr "C"
             'c': {
                 'msgid': 'c',
                 'msgstr': [ 'C' ],
-                'line': 9,
+                'line': 8,
                 'column': 1,
             },
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 5, 4, 'Unexpected #| quoted text', ),
+            ( 5, 7, 'Unknown token', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -8874,8 +8988,7 @@ msgstr "C"
 msgid "a"
 msgstr "A"
 
-#| "error_before_msgid"
-msgid "error state"
+msgid error_state
 "text"
 msgstr "B"
 
@@ -8893,13 +9006,13 @@ msgstr "C"
             'c': {
                 'msgid': 'c',
                 'msgstr': [ 'C' ],
-                'line': 10,
+                'line': 9,
                 'column': 1,
             },
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 5, 4, 'Unexpected #| quoted text', ),
+            ( 5, 7, 'Unknown token', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -8909,8 +9022,7 @@ msgstr "C"
 msgid "a"
 msgstr "A"
 
-#| "error_before_msgid"
-msgid "error state"
+msgid error_state
 error_token
 msgstr "B"
 
@@ -8928,13 +9040,13 @@ msgstr "C"
             'c': {
                 'msgid': 'c',
                 'msgstr': [ 'C' ],
-                'line': 10,
+                'line': 9,
                 'column': 1,
             },
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 5, 4, 'Unexpected #| quoted text', ),
+            ( 5, 7, 'Unknown token', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -8944,8 +9056,7 @@ msgstr "C"
 msgid "a"
 msgstr "A"
 
-#| "error_before_msgid"
-msgid "error state"
+msgid error_state
 ''')
         good = True
         good &= po_entries == {
@@ -8958,7 +9069,7 @@ msgid "error state"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 5, 4, 'Unexpected #| quoted text', ),
+            ( 5, 7, 'Unknown token', ),
         ]
         return 'Some errors are detected' if not good else None
 
@@ -8968,53 +9079,8 @@ msgid "error state"
 msgid "a"
 msgstr "A"
 
-#| "error_before_msgid"
-msgid "error state"
+msgid error_state
 #| msgctxt "pcb"
-#| msgid "pb"
-msgid "b"
-msgstr "B"
-
-msgid "c"
-msgstr "C"
-''')
-        good = True
-        good &= po_entries == {
-            'a': {
-                'msgid': 'a',
-                'msgstr': [ 'A' ],
-                'line': 2,
-                'column': 1,
-            },
-            'b': {
-                'msgid': 'b',
-                'msgstr': [ 'B' ],
-                'line': 9,
-                'column': 1,
-                'prev_msgctxt': 'pcb',
-                'prev_msgid': 'pb',
-            },
-            'c': {
-                'msgid': 'c',
-                'msgstr': [ 'C' ],
-                'line': 12,
-                'column': 1,
-            },
-        }
-        good &= len(obsolete_entries) == 0
-        good &= error_messages == [
-            ( 5, 4, 'Unexpected #| quoted text', ),
-        ]
-        return 'Some errors are detected' if not good else None
-
-    @add_test(tests)
-    def test_input_prev_msgid_in_state_error():
-        po_entries, obsolete_entries, error_messages = parse('''
-msgid "a"
-msgstr "A"
-
-#| "error_before_msgid"
-msgid "error state"
 #| msgid "pb"
 msgid "b"
 msgstr "B"
@@ -9035,6 +9101,7 @@ msgstr "C"
                 'msgstr': [ 'B' ],
                 'line': 8,
                 'column': 1,
+                'prev_msgctxt': 'pcb',
                 'prev_msgid': 'pb',
             },
             'c': {
@@ -9046,7 +9113,49 @@ msgstr "C"
         }
         good &= len(obsolete_entries) == 0
         good &= error_messages == [
-            ( 5, 4, 'Unexpected #| quoted text', ),
+            ( 5, 7, 'Unknown token', ),
+        ]
+        return 'Some errors are detected' if not good else None
+
+    @add_test(tests)
+    def test_input_prev_msgid_in_state_error():
+        po_entries, obsolete_entries, error_messages = parse('''
+msgid "a"
+msgstr "A"
+
+msgid error_state
+#| msgid "pb"
+msgid "b"
+msgstr "B"
+
+msgid "c"
+msgstr "C"
+''')
+        good = True
+        good &= po_entries == {
+            'a': {
+                'msgid': 'a',
+                'msgstr': [ 'A' ],
+                'line': 2,
+                'column': 1,
+            },
+            'b': {
+                'msgid': 'b',
+                'msgstr': [ 'B' ],
+                'line': 7,
+                'column': 1,
+                'prev_msgid': 'pb',
+            },
+            'c': {
+                'msgid': 'c',
+                'msgstr': [ 'C' ],
+                'line': 10,
+                'column': 1,
+            },
+        }
+        good &= len(obsolete_entries) == 0
+        good &= error_messages == [
+            ( 5, 7, 'Unknown token', ),
         ]
         return 'Some errors are detected' if not good else None
 

@@ -487,6 +487,7 @@ class _TokenFeeder:
 # In a msgstr text: MSGSTR_TEXT <= x <= MSGSTR_PLURAL_TEXT
 class _State(enum.IntEnum):
     END_OF_ENTRY = enum.auto() # Special state, don't consume a token.
+    ABORT_ENTRY = enum.auto() # Special state, don't consume a token.
     ERROR_BEFORE_MSGID = enum.auto() # The next msgid should be dropped.
     COMMENT = enum.auto()
     PREV_MSGCTXT = enum.auto()
@@ -509,6 +510,37 @@ class _State(enum.IntEnum):
     EOF = enum.auto()
     TOTAL = enum.auto()
 
+# The default is the transition to the state ERROR_BEFORE_MSGID, which makes parse() skip until a msgid, msgid_plural, msgstr, or msgid_plural is appeared, and then search the starting token of the next entry to recover.
+_state_trans_table = [ [ _State.ERROR_BEFORE_MSGID ] * _Token.TOTAL for i in range(_State.TOTAL) ]
+for s in range(_State.TOTAL):
+    for k in range(_Token.TOTAL):
+        if k == _Token.COMMENT or \
+           k == _Token.PREV_MSGCTXT or \
+           k == _Token.PREV_MSGID or \
+           k == _Token.MSGCTXT or \
+           k == _Token.MSGID or \
+           k == _Token.EOF:
+            # The token suggests the end of the current entry and the token is the start of the next entry.
+            if (_State.MSGID <= s and s <= _State.MSGSTR_PLURAL) or \
+               s == _State.MSGID_TEXT or \
+               s == _State.MSGID_PLURAL_TEXT or \
+               s == _State.ERROR:
+                # The current entry is almost finished, but not completed.
+                _state_trans_table[s][k] = _State.ABORT_ENTRY
+            elif s == _State.MSGSTR_TEXT or s == _State.MSGSTR_PLURAL_TEXT:
+                # The current entry is finished.
+                _state_trans_table[s][k] = _State.END_OF_ENTRY
+            # else: the token belongs to the current entry.
+        elif s == _State.ERROR or \
+             k == _Token.MSGID or \
+             k == _Token.MSGID_PLURAL or \
+             k == _Token.MSGSTR or \
+             k == _Token.MSGSTR_PLURAL:
+            # The next starting token belongs to the next entry.
+            # Try to find the start token of the next entry to recover.
+            _state_trans_table[s][k] = _State.ERROR
+        # else: the token belongs to the current entry.
+# Other transitions
 _state_trans_def = (
     # Current state -> received Token -> New State
     ( _State.COMMENT, _Token.COMMENT, _State.COMMENT, ),
@@ -532,36 +564,28 @@ _state_trans_def = (
     ( _State.MSGCTXT_TEXT, _Token.TEXT, _State.MSGCTXT_TEXT, ),
     ( _State.MSGCTXT_TEXT, _Token.MSGID, _State.MSGID, ),
     ( _State.MSGID, _Token.TEXT, _State.MSGID_TEXT, ),
+    ( _State.MSGID, _Token.ERROR, _State.ERROR, ),
     ( _State.MSGID_TEXT, _Token.TEXT, _State.MSGID_TEXT, ),
     ( _State.MSGID_TEXT, _Token.MSGID_PLURAL, _State.MSGID_PLURAL, ),
     ( _State.MSGID_TEXT, _Token.MSGSTR, _State.MSGSTR, ),
     ( _State.MSGID_TEXT, _Token.ERROR, _State.ERROR, ),
     ( _State.MSGID_PLURAL, _Token.TEXT, _State.MSGID_PLURAL_TEXT, ),
+    ( _State.MSGID_PLURAL, _Token.ERROR, _State.ERROR, ),
     ( _State.MSGID_PLURAL_TEXT, _Token.TEXT, _State.MSGID_PLURAL_TEXT, ),
     ( _State.MSGID_PLURAL_TEXT, _Token.MSGSTR_PLURAL, _State.MSGSTR_PLURAL, ),
     ( _State.MSGID_PLURAL_TEXT, _Token.ERROR, _State.ERROR, ),
     ( _State.MSGSTR, _Token.TEXT, _State.MSGSTR_TEXT, ),
+    ( _State.MSGSTR, _Token.ERROR, _State.ERROR, ),
     ( _State.MSGSTR_TEXT, _Token.TEXT, _State.MSGSTR_TEXT, ),
-    ( _State.MSGSTR_TEXT, _Token.COMMENT, _State.END_OF_ENTRY, ),
-    ( _State.MSGSTR_TEXT, _Token.PREV_MSGCTXT, _State.END_OF_ENTRY, ),
-    ( _State.MSGSTR_TEXT, _Token.PREV_MSGID, _State.END_OF_ENTRY, ),
     ( _State.MSGSTR_TEXT, _Token.PREV_MSGID_PLURAL, _State.END_OF_ENTRY, ), # register the entry, and then error
     ( _State.MSGSTR_TEXT, _Token.PREV_TEXT, _State.END_OF_ENTRY, ), # register the entry, and then error
-    ( _State.MSGSTR_TEXT, _Token.MSGCTXT, _State.END_OF_ENTRY, ),
-    ( _State.MSGSTR_TEXT, _Token.MSGID, _State.END_OF_ENTRY, ),
-    ( _State.MSGSTR_TEXT, _Token.EOF, _State.END_OF_ENTRY, ),
     ( _State.MSGSTR_TEXT, _Token.ERROR, _State.ERROR, ),
     ( _State.MSGSTR_PLURAL, _Token.TEXT, _State.MSGSTR_PLURAL_TEXT, ),
+    ( _State.MSGSTR_PLURAL, _Token.ERROR, _State.ERROR, ),
     ( _State.MSGSTR_PLURAL_TEXT, _Token.TEXT, _State.MSGSTR_PLURAL_TEXT, ),
     ( _State.MSGSTR_PLURAL_TEXT, _Token.MSGSTR_PLURAL, _State.MSGSTR_PLURAL, ),
-    ( _State.MSGSTR_PLURAL_TEXT, _Token.COMMENT, _State.END_OF_ENTRY, ),
-    ( _State.MSGSTR_PLURAL_TEXT, _Token.PREV_MSGCTXT, _State.END_OF_ENTRY, ),
-    ( _State.MSGSTR_PLURAL_TEXT, _Token.PREV_MSGID, _State.END_OF_ENTRY, ),
     ( _State.MSGSTR_PLURAL_TEXT, _Token.PREV_MSGID_PLURAL, _State.END_OF_ENTRY, ), # register the entry, and then error
     ( _State.MSGSTR_PLURAL_TEXT, _Token.PREV_TEXT, _State.END_OF_ENTRY, ), # register the entry, and then error
-    ( _State.MSGSTR_PLURAL_TEXT, _Token.MSGCTXT, _State.END_OF_ENTRY, ),
-    ( _State.MSGSTR_PLURAL_TEXT, _Token.MSGID, _State.END_OF_ENTRY, ),
-    ( _State.MSGSTR_PLURAL_TEXT, _Token.EOF, _State.END_OF_ENTRY, ),
     ( _State.MSGSTR_PLURAL_TEXT, _Token.ERROR, _State.ERROR, ),
     ( _State.END_OF_ENTRY, _Token.COMMENT, _State.COMMENT, ),
     ( _State.END_OF_ENTRY, _Token.PREV_MSGCTXT, _State.PREV_MSGCTXT, ),
@@ -569,21 +593,15 @@ _state_trans_def = (
     ( _State.END_OF_ENTRY, _Token.MSGCTXT, _State.MSGCTXT, ),
     ( _State.END_OF_ENTRY, _Token.MSGID, _State.MSGID, ),
     ( _State.END_OF_ENTRY, _Token.EOF, _State.EOF, ),
-    ( _State.ERROR, _Token.COMMENT, _State.END_OF_ENTRY, ),
-    ( _State.ERROR, _Token.PREV_MSGCTXT, _State.END_OF_ENTRY, ),
-    ( _State.ERROR, _Token.PREV_MSGID, _State.END_OF_ENTRY, ),
+    ( _State.ABORT_ENTRY, _Token.COMMENT, _State.COMMENT, ),
+    ( _State.ABORT_ENTRY, _Token.PREV_MSGCTXT, _State.PREV_MSGCTXT, ),
+    ( _State.ABORT_ENTRY, _Token.PREV_MSGID, _State.PREV_MSGID, ),
+    ( _State.ABORT_ENTRY, _Token.MSGCTXT, _State.MSGCTXT, ),
+    ( _State.ABORT_ENTRY, _Token.MSGID, _State.MSGID, ),
+    ( _State.ABORT_ENTRY, _Token.EOF, _State.EOF, ),
     ( _State.ERROR, _Token.PREV_MSGID_PLURAL, _State.ERROR_BEFORE_MSGID, ),
     ( _State.ERROR, _Token.PREV_TEXT, _State.ERROR_BEFORE_MSGID, ),
-    ( _State.ERROR, _Token.MSGCTXT, _State.END_OF_ENTRY, ),
-    ( _State.ERROR, _Token.MSGID, _State.END_OF_ENTRY, ),
-    ( _State.ERROR, _Token.EOF, _State.END_OF_ENTRY, ),
 )
-# Other tokens cause the transition to an error state, which makes parse() skip until a msgid, msgid_plural, msgstr, or msgid_plural is appeared, and then find the start location of the next entry to recover.
-_state_trans_table = [ [ _State.ERROR_BEFORE_MSGID ] * _Token.TOTAL for i in range(_State.TOTAL) ]
-for i in range(_State.TOTAL):
-    for j in range(_Token.TOTAL):
-        if i == _State.ERROR or j == _Token.MSGID or j == _Token.MSGID_PLURAL or j == _Token.MSGSTR or j == _Token.MSGSTR_PLURAL:
-            _state_trans_table[i][j] = _State.ERROR
 for d in _state_trans_def:
     _state_trans_table[d[0]][d[1]] = d[2]
 
@@ -646,8 +664,8 @@ def parse(textfile_or_char_iter):
     errors = []
     for token, obsolete, value, line, column in token_feeder:
         new_state = _state_trans_table[state][token]
-        if new_state == _State.END_OF_ENTRY:
-            if state != _State.ERROR:
+        if new_state == _State.END_OF_ENTRY or new_state == _State.ABORT_ENTRY:
+            if new_state == _State.END_OF_ENTRY:
                 # register the current entry
                 if 'flag' in entry_data and 'fuzzy' in entry_data['flag']:
                     entry_data['fuzzy'] = True
@@ -667,6 +685,12 @@ def parse(textfile_or_char_iter):
                     obsolete_entries[id] = entry_data
                 else:
                     po_entries[id] = entry_data
+            else:
+                if state != _State.ERROR and state != _State.ERROR_BEFORE_MSGID:
+                    # Report only the error that causes the transition to an error.
+                    kw_str = _token_str[token]
+                    err_msg = f'Unexpected {kw_str} (the previous entry is incomplete)'
+                    errors.append( ( line, column, err_msg, ) )
             # initialize the new entry
             entry_data = {}
             entry_is_obsolete = None
@@ -676,7 +700,7 @@ def parse(textfile_or_char_iter):
             new_state = _state_trans_table[new_state][token]
         if new_state == _State.ERROR or new_state == _State.ERROR_BEFORE_MSGID:
             if state != _State.ERROR and state != _State.ERROR_BEFORE_MSGID:
-                # Report only the error that causes the transition to ERROR.
+                # Report only the error that causes the transition to an error.
                 if token == _Token.ERROR:
                     errors.append( ( line, column, value, ) )
                 else:
