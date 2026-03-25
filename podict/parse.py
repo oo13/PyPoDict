@@ -35,14 +35,12 @@ class _CharFeeder:
         if c is None:
             raise StopIteration
         return c
-    def line_number(self):
-        return self._line
-    def column_number(self):
-        return self._column
+    def get_location(self):
+        return self._line, self._column
     def ungetc(self, c):
         '''self.__next__() will return c
 
-        line_number() and column_number() return invalid value until calling __next__().
+        get_location() returns invalid value until calling __next__().
         '''
         if self._next_c is not None:
             raise OverflowError
@@ -124,8 +122,7 @@ def _parse_msg_keyword(char_feeder):
     '''
     token = _Token.ERROR
     value = None
-    line = char_feeder.line_number()
-    column = char_feeder.column_number()
+    line, column = char_feeder.get_location()
     if _startswith(char_feeder, 'sg'):
         c = next(char_feeder, None)
         if c == 'c' and _startswith(char_feeder, 'txt'):
@@ -165,12 +162,10 @@ def _parse_msg_keyword(char_feeder):
                     if c not in string.whitespace:
                         break
                 if len(n_str) == 0:
-                    line = char_feeder.line_number()
-                    column = char_feeder.column_number()
+                    line, column = char_feeder.get_location()
                     return _Token.ERROR, "'0'..'9' is expected", line, column
                 elif c != ']':
-                    line = char_feeder.line_number()
-                    column = char_feeder.column_number()
+                    line, column = char_feeder.get_location()
                     return _Token.ERROR, "'0'..'9' or ']' is expected", line, column
                 value = int(n_str)
                 token = _Token.MSGSTR_PLURAL
@@ -292,8 +287,7 @@ def _parse_text(char_feeder):
     '''
     text = _UTF8Text()
     err_msg = None
-    line = char_feeder.line_number()
-    column = char_feeder.column_number()
+    line, column = char_feeder.get_location()
     closed = False
     for c in char_feeder:
         if c == '\n':
@@ -301,16 +295,14 @@ def _parse_text(char_feeder):
             char_feeder.ungetc(c)
             if err_msg is None:
                 err_msg = 'The text may not contain a newline'
-                line = char_feeder.line_number()
-                column = char_feeder.column_number()
+                line, column = char_feeder.get_location()
             break
         elif c == '"':
             closed = True
             break
         elif c == '\\':
             error = False
-            escale_line = char_feeder.line_number()
-            escale_column = char_feeder.column_number()
+            escape_line, escape_column = char_feeder.get_location()
             c = next(char_feeder, None)
             if c is None:
                 error = True
@@ -328,7 +320,7 @@ def _parse_text(char_feeder):
                         char_feeder.ungetc(c)
                         break;
                 code = int(oct_str, base=8) & 0xFF
-                text.add_code(code, escale_line, escale_column)
+                text.add_code(code, escape_line, escape_column)
             elif c == 'x':
                 c = next(char_feeder, None)
                 if c is None or c not in string.hexdigits:
@@ -342,20 +334,18 @@ def _parse_text(char_feeder):
                             char_feeder.ungetc(c)
                             break
                     code = int(hex_str, base=16) & 0xFF
-                    text.add_code(code, escale_line, escale_column)
+                    text.add_code(code, escape_line, escape_column)
             else:
                 error = True
             if error and err_msg is None:
                 err_msg = "Invalid escape sequence"
-                line = char_feeder.line_number()
-                column = char_feeder.column_number()
+                line, column = char_feeder.get_location()
                 # consume input characters until '"' is found.
         else:
             text.add_text(c)
     if not closed and err_msg is None:
         err_msg = 'Closing double quotation mark is expected'
-        line = char_feeder.line_number()
-        column = char_feeder.column_number()
+        line, column = char_feeder.get_location()
     if err_msg is None:
         return _Token.TEXT, text, line, column
     else:
@@ -383,11 +373,10 @@ def _lex(char_feeder):
             is_eof = False
             break
     if is_eof:
-        return _Token.EOF, None, char_feeder.line_number(), char_feeder.column_number()
+        return _Token.EOF, None, *char_feeder.get_location()
     elif c == '#':
         comment_body = c # comment_body contains the first '#'.
-        line = char_feeder.line_number()
-        column = char_feeder.column_number()
+        line, column = char_feeder.get_location()
         c = next(char_feeder, None)
         if c == '~':
             c = next(char_feeder, None)
@@ -412,7 +401,7 @@ def _lex(char_feeder):
         return _parse_text(char_feeder)
     else:
         # Unkonwn token
-        return _Token.ERROR, 'Unknown token', char_feeder.line_number(), char_feeder.column_number()
+        return _Token.ERROR, 'Unknown token', *char_feeder.get_location()
 
 def _parse_range_flag_parameter(param):
     '''Is 'param' the parameter of the 'range' flag?'''
