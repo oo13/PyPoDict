@@ -907,7 +907,7 @@ msgstr "A"
 
 msgid "b"
 msgstr ""
-"x\\xaby"
+"x\\x7by"
 
 msgid "c"
 msgstr "C"
@@ -922,7 +922,7 @@ msgstr "C"
             },
             'b': {
                 'msgid': 'b',
-                'msgstr': [ 'x\xABy' ],
+                'msgstr': [ 'x\x7By' ],
                 'line': 5,
                 'column': 1,
             },
@@ -945,7 +945,7 @@ msgstr "A"
 
 msgid "b"
 msgstr ""
-"x\\xaBcy"
+"x\\xa6Cy"
 
 msgid "c"
 msgstr "C"
@@ -960,7 +960,7 @@ msgstr "C"
             },
             'b': {
                 'msgid': 'b',
-                'msgstr': [ 'x\xBCy' ],
+                'msgstr': [ 'x\x6Cy' ],
                 'line': 5,
                 'column': 1,
             },
@@ -983,7 +983,7 @@ msgstr "A"
 
 msgid "b"
 msgstr ""
-"x\\x0123456789ABCDEFabcdefy"
+"x\\x0123456789ABCDEFabcdef76y"
 
 msgid "c"
 msgstr "C"
@@ -998,7 +998,7 @@ msgstr "C"
             },
             'b': {
                 'msgid': 'b',
-                'msgstr': [ 'x\xEFy' ],
+                'msgstr': [ 'x\x76y' ],
                 'line': 5,
                 'column': 1,
             },
@@ -1131,6 +1131,118 @@ msgstr ""
         good &= error_messages == [
             ( 7, 27, 'Closing double quotation mark is expected', ),
         ]
+        return 'Some errors are detected' if not good else None
+
+    @add_test(tests)
+    def test_escape_hex_oct_utf_8_encoding():
+        po_entries, obsolete_entries, error_messages = parse('''
+#| msgctxt "\\xe3\\x81\\x82"
+#| msgid "\\343\\201\\204"
+#| msgid_plural "\\xe3\\x81\\x86"
+msgctxt "\\xe3\\x81\\x88"
+msgid "\\xe3\\x81\\x8A"
+msgid_plural "\\xe3\\x81\\x8B"
+msgstr[0] "\\xe3\\x81\\x8D"
+
+msgid "b"
+msgstr "\\xe3\\x81\\x8F"
+''')
+        good = True
+        good &= po_entries == {
+            'え' + '\x04' + 'お' : {
+                'msgctxt': 'え',
+                'msgid': 'お',
+                'msgid_plural': 'か',
+                'msgstr': [ 'き' ],
+                'line': 5,
+                'column': 1,
+                'prev_msgctxt': 'あ',
+                'prev_msgid': 'い',
+                'prev_msgid_plural': 'う',
+            },
+            'b': {
+                'msgid': 'b',
+                'msgstr': [ 'く' ],
+                'line': 10,
+                'column': 1,
+            },
+        }
+        good &= len(obsolete_entries) == 0
+        good &= len(error_messages) == 0
+        return 'Some errors are detected' if not good else None
+
+    @add_test(tests)
+    def test_concat_and_escape_hex_oct_utf_8_encoding():
+        po_entries, obsolete_entries, error_messages = parse('''
+msgid "\\xe3" "\\x81" "\\x82" "0\\xe3" "\\x81" "\\x84"
+msgid_plural "\\xe3" "\\x81" "\\x86Z" "X\\xe3\\x81\\x88"
+msgstr[0] ""
+"Z\\xe3" "\\x81\\x8A"
+msgstr[1] ""
+"Z\\xe3\\x81\\x8B" "X\\xe3\\x81\\x8D"
+msgstr[2] ""
+"Z" "\\xe3\\x81\\x8FX"
+msgstr[3] ""
+"Z\\xe3\\x81\\x91" ""
+msgstr[4] ""
+"Z\\xe3\\x81\\x93" "\\xe3\\x81\\x95"
+msgstr[5] ""
+"Z" "\\xe3\\x81\\x97"
+''')
+        good = True
+        good &= po_entries == {
+            'あ0い': {
+                'msgid': 'あ0い',
+                'msgid_plural': 'うZXえ',
+                'msgstr': [ 'Zお', 'ZかXき', 'ZくX', 'Zけ', 'Zこさ', 'Zし' ],
+                'line': 2,
+                'column': 1,
+            },
+        }
+        good &= len(obsolete_entries) == 0
+        good &= len(error_messages) == 0
+        return 'Some errors are detected' if not good else None
+
+    @add_test(tests)
+    def test_escape_hex_oct_invalid_utf_8_encoding():
+        po_entries, obsolete_entries, error_messages = parse('''
+msgid "\\xe3" "\\x81" "\\xE2" "0\\xe3" "\\xF1" "\\x84"
+msgid_plural "\\xe3" "\\xF1" "\\x86Z" "X\\xe3\\xF1\\x88"
+msgstr[0] ""
+"Z\\xe3" "\\x81\\x4A"
+msgstr[1] ""
+"Z\\x43\\x81\\x8B" "X\\xe3\\xF1\\x8D"
+msgstr[2] ""
+"Z" "\\x43\\x81\\x8FX"
+msgstr[3] ""
+"Z\\xe3\\xE1\\x91" ""
+msgstr[4] ""
+"Z\\xe3\\x81\\xE3" "\\xe3\\xF1\\x95"
+msgstr[5] ""
+"Z" "\\xe3\\xD1\\x97"
+''')
+        good = True
+        good &= po_entries == {
+            '�0�': {
+                'msgid': '�0�',
+                'msgid_plural': '�ZX�',
+                'msgstr': [ 'Z�', 'Z�X�', 'Z�X', 'Z�', 'Z�', 'Z�' ],
+                'line': 2,
+                'column': 1,
+            },
+        }
+        good &= len(obsolete_entries) == 0
+        if len(error_messages) == 8:
+            good &= error_messages[0][0:2] == (2, 8, )
+            good &= error_messages[1][0:2] == (3, 15, )
+            good &= error_messages[2][0:2] == (5, 3, )
+            good &= error_messages[3][0:2] == (7, 3, )
+            good &= error_messages[4][0:2] == (9, 6, )
+            good &= error_messages[5][0:2] == (11, 3, )
+            good &= error_messages[6][0:2] == (13, 3, )
+            good &= error_messages[7][0:2] == (15, 6, )
+        else:
+            good = False
         return 'Some errors are detected' if not good else None
 
     return run_test(tests, msgout, verbose)

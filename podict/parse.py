@@ -192,6 +192,90 @@ _escape_map = {
     '?': '?',
 }
 
+class _UTF8Text:
+    '''A text holder that can contain str and bytearray.'''
+    def __init__(self):
+        self._b = [ None, None ] # [0]: bytearray before _s, [1]: bytearray after _s.
+        self._loc = [ None, None ] # source location of each bytearray
+        self._s = ''
+        self._first_error_loc = None
+        self._first_error_msg = None
+    def _decode(self, idx):
+        error_loc = None
+        try:
+            dec = self._b[idx].decode()
+        except UnicodeDecodeError as e:
+            if idx == 0 or self._first_error_loc is None:
+                self._first_error_loc = self._loc[idx]
+                self._first_error_msg = str(e)
+            dec = '\uFFFD'
+        self._b[idx] = None
+        self._loc[idx] = None
+        if idx == 0:
+            self._s = dec + self._s
+        else:
+            self._s += dec
+    def add_text(self, c_or_s):
+        '''add a character or a text.'''
+        if self._b[1] is not None:
+            self._decode(1)
+        self._s += c_or_s
+    def add_code(self, code, line, column):
+        '''add an 8 bit code.'''
+        idx = 0 if len(self._s) == 0 else 1
+        if self._b[idx] is None:
+            self._b[idx] = bytearray()
+            self._loc[idx] = ( line, column, )
+        self._b[idx].append(code)
+    def concat(self, other):
+        '''concatenate'''
+        if len(self._s) == 0:
+            # self._b[1] and self._loc[1] must be None.
+            if self._b[0] is None:
+                self._b = other._b
+                self._loc = other._loc
+                self._s = other._s
+            else:
+                if other._b[0] is not None:
+                    self._b[0] += other._b[0]
+                self._s = other._s
+                self._b[1] = other._b[1]
+                self._loc[1] = other._loc[1]
+        elif self._b[1] is None and other._b[0] is None:
+            self._s += other._s
+            self._b[1] = other._b[1]
+            self._loc[1] = other._loc[1]
+        else:
+            if other._b[0] is not None:
+                if self._b[1] is not None:
+                    self._b[1] += other._b[0]
+                else:
+                    self._b[1] = other._b[0]
+                    self._loc[1] = other._loc[0]
+            if len(other._s) > 0:
+                if self._b[1] is not None:
+                    self._decode(1)
+                self._s += other._s
+                self._b[1] = other._b[1]
+                self._loc[1] = other._loc[1]
+        if self._first_error_loc is None:
+            self._first_error_loc = other._first_error_loc
+            self._first_error_msg = other._first_error_msg
+    def get(self):
+        '''decode and return string, first error location, and error message.
+
+        return string, (line, column, ), message if some errors are detected.
+        return string, None, None if no error is detected.
+        '''
+        if self._b[0] is None and self._b[1] is None:
+            # Almost all cases.
+            return self._s, self._first_error_loc, self._first_error_msg
+        if self._b[1] is not None:
+            self._decode(1)
+        if self._b[0] is not None:
+            self._decode(0)
+        return self._s, self._first_error_loc, self._first_error_msg
+
 def _parse_text(char_feeder):
     '''parse "text"
 
@@ -201,12 +285,12 @@ def _parse_text(char_feeder):
 
     return token, value, error line, error column
 
-    The value for the token TEXT is the text.
+    The value for the token TEXT is the instance of _UTF8Text.
     The value for the token ERROR is the error message.
 
     line and column are the location of the opening '"' or the location detecting the error.
     '''
-    text = ''
+    text = _UTF8Text()
     err_msg = None
     line = char_feeder.line_number()
     column = char_feeder.column_number()
@@ -225,11 +309,13 @@ def _parse_text(char_feeder):
             break
         elif c == '\\':
             error = False
+            escale_line = char_feeder.line_number()
+            escale_column = char_feeder.column_number()
             c = next(char_feeder, None)
             if c is None:
                 error = True
             elif c in _escape_map:
-                text += _escape_map[c]
+                text.add_text(_escape_map[c])
             elif c in string.octdigits:
                 oct_str = c
                 for i in range(2):
@@ -241,7 +327,8 @@ def _parse_text(char_feeder):
                     else:
                         char_feeder.ungetc(c)
                         break;
-                text += chr(int(oct_str, base=8) & 0xFF)
+                code = int(oct_str, base=8) & 0xFF
+                text.add_code(code, escale_line, escale_column)
             elif c == 'x':
                 c = next(char_feeder, None)
                 if c is None or c not in string.hexdigits:
@@ -254,7 +341,8 @@ def _parse_text(char_feeder):
                         else:
                             char_feeder.ungetc(c)
                             break
-                    text += chr(int(hex_str, base=16) & 0xFF)
+                    code = int(hex_str, base=16) & 0xFF
+                    text.add_code(code, escale_line, escale_column)
             else:
                 error = True
             if error and err_msg is None:
@@ -263,7 +351,7 @@ def _parse_text(char_feeder):
                 column = char_feeder.column_number()
                 # consume input characters until '"' is found.
         else:
-            text += c
+            text.add_text(c)
     if not closed and err_msg is None:
         err_msg = 'Closing double quotation mark is expected'
         line = char_feeder.line_number()
@@ -661,11 +749,24 @@ def parse(textfile_or_char_iter):
     fuzzy = False
     n = 0
     keyword = None
-    errors = []
     for token, obsolete, value, line, column in token_feeder:
         new_state = _state_trans_table[state][token]
         if new_state == _State.END_OF_ENTRY or new_state == _State.ABORT_ENTRY:
             if new_state == _State.END_OF_ENTRY:
+                # solve the escape sequence hex and oct.
+                for key in ( 'msgctxt', 'msgid', 'msgid_plural', 'prev_msgctxt', 'prev_msgid', 'prev_msgid_plural', ):
+                    if key in entry_data:
+                        entry_data[key], dec_err_loc, dec_err_msg = entry_data[key].get()
+                        if dec_err_loc is not None:
+                            # Report, but ignored, because the invalid code is replaced by U+FFFD.
+                            errors.append( ( dec_err_loc[0], dec_err_loc[1], dec_err_msg, ) )
+                        entry_data[key] = str(entry_data[key])
+                if 'msgstr' in entry_data:
+                    for i, t in enumerate(entry_data['msgstr']):
+                        entry_data['msgstr'][i], dec_err_loc, dec_err_msg = entry_data['msgstr'][i].get()
+                        if dec_err_loc is not None:
+                            # Report, but ignored, because the invalid code is replaced by U+FFFD.
+                            errors.append( ( dec_err_loc[0], dec_err_loc[1], dec_err_msg, ) )
                 # register the current entry
                 if 'flag' in entry_data and 'fuzzy' in entry_data['flag']:
                     entry_data['fuzzy'] = True
@@ -750,46 +851,46 @@ def parse(textfile_or_char_iter):
         elif state == _State.PREV_MSGCTXT:
             entry_is_obsolete = obsolete
             keyword = 'prev_msgctxt'
-            entry_data[keyword] = ''
+            entry_data[keyword] = _UTF8Text()
         elif state == _State.PREV_MSGID:
             entry_is_obsolete = obsolete
             keyword = 'prev_msgid'
-            entry_data[keyword] = ''
+            entry_data[keyword] = _UTF8Text()
         elif state == _State.PREV_MSGID_PLURAL:
             keyword = 'prev_msgid_plural'
-            entry_data[keyword] = ''
+            entry_data[keyword] = _UTF8Text()
         elif state == _State.MSGCTXT:
             entry_data.setdefault('line', line)
             entry_data.setdefault('column', column)
             entry_is_obsolete = obsolete
             keyword = 'msgctxt'
-            entry_data[keyword] = ''
+            entry_data[keyword] = _UTF8Text()
         elif state == _State.MSGID:
             entry_data.setdefault('line', line)
             entry_data.setdefault('column', column)
             entry_is_obsolete = obsolete
             keyword = 'msgid'
-            entry_data[keyword] = ''
+            entry_data[keyword] = _UTF8Text()
         elif state == _State.MSGID_PLURAL:
             keyword = 'msgid_plural'
-            entry_data[keyword] = ''
+            entry_data[keyword] = _UTF8Text()
         elif _State.PREV_MSGCTXT_TEXT <= state and state <= _State.MSGID_PLURAL_TEXT:
-            entry_data[keyword] += value
+            entry_data[keyword].concat(value)
         elif state == _State.MSGSTR:
-            entry_data['msgstr'] = [ "" ]
+            entry_data['msgstr'] = [ _UTF8Text() ]
         elif state == _State.MSGSTR_PLURAL:
             keyword = None
             if n == value:
                 if n == 0:
-                    entry_data['msgstr'] = [ "" ]
+                    entry_data['msgstr'] = [ _UTF8Text() ]
                 else:
-                    entry_data['msgstr'].append("")
+                    entry_data['msgstr'].append(_UTF8Text())
                 n += 1
             else:
                 errors.append( ( line, column, f'Invalid n in msgstr[n]; n should be {n} but {value}', ) )
                 state = _State.ERROR
         elif state == _State.MSGSTR_TEXT or state == _State.MSGSTR_PLURAL_TEXT:
-            entry_data['msgstr'][-1] += value
+            entry_data['msgstr'][-1].concat(value)
     return po_entries, obsolete_entries, errors
 
 if __name__ == "__main__":
